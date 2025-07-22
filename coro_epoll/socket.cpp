@@ -58,4 +58,39 @@ Socket::~Socket() {
 
 task<std::shared_ptr<Socket>> Socket::accept() {
     int fd = co_await Accept(this);
+		if(fd == -1) {
+			throw std::runtime_error("accept error");
+		}
+		co_return std::shared_ptr<Socket>(new Socket{fd,io_context_});
+}
+
+Recv Socket::recv(void  *buffer, std::size_t len) {
+  return Recv(this, buffer, len);
+}
+
+Send Socket::send(void *buffer, std::size_t len) {
+  return Send(this, buffer, len);
+}
+
+bool Socket::ResumeRecv() {
+  if(!coro_recv_) {
+		std::cout << "ResumeRecv: coro_recv_ is null" << std::endl;
+		return false;
+	}
+	coro_recv_.resume();
+	return true;
+}
+
+bool Socket::ResumeSend() {
+  if(!coro_send_) {
+		std::cout << "ResumeSend: coro_send_ is null" << std::endl;
+		return false;
+	}
+	coro_send_.resume();
+	return true;
+}
+
+Socket::Socket(int fd,IoContext &io_context) :  io_context_(io_context), fd_(fd){
+	fcntl(fd_, F_SETFL, O_NONBLOCK);
+	io_context_.Attach(this);
 }

@@ -6,6 +6,9 @@
 #include <iostream>
 #include <sys/socket.h>
 
+/*
+	封装异步系统调用
+*/
 template <typename Syscall, typename ReturnValue> class AsyncSyscall {
 public:
   AsyncSyscall() : suspended_(false) {}
