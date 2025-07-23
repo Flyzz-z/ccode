@@ -2,6 +2,7 @@
 
 #include "socket.h"
 #include "task.h"
+#include "io_context.h"
 #include <cerrno>
 #include <iostream>
 #include <sys/socket.h>
@@ -29,10 +30,11 @@ public:
     return suspended_;
   }
 
+  // await_resume会在协程resume时被调用。即handle_.resume()被调用时，会执行这个函数
   ReturnValue await_resume() noexcept {
     std::cout << "await resume "<< std::endl;
     if(suspended_) {
-      value_ = static_cast<Syscall *>(this)->Resume();
+      value_ = static_cast<Syscall *>(this)->Syscall();
     }
     return value_;
   }
@@ -121,6 +123,9 @@ public:
     return ::recv(socket_->fd_, buffer_, len_, 0);
   }
 
+  void SetcoroHandle() {
+    socket_->coro_recv_ = handle_;
+  }
 private:
   Socket *socket_;
   void *buffer_;
